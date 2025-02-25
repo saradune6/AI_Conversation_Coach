@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Conversation Coach</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            color: #333;
+        }
+        h1 {
+            font-size: 2em;
+        }
+        #voice-btn, #text-submit {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+            margin: 5px;
+        }
+        #voice-btn:hover, #text-submit:hover {
+            background-color: #3700b3;
+        }
+        #result {
+            margin: 15px 0;
+            font-style: italic;
+        }
+        #response-box {
+            width: 80%;
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f4f4f4;
+            text-align: left;
+            font-family: monospace;
+            min-height: 100px;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+        #copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ccc;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #copy-btn:hover {
+            background: #bbb;
+        }
+        #text-input {
+            padding: 10px;
+            width: 60%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: #ffffff;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Conversation Coach</h1>
+    <input type="text" id="text-input" placeholder="Type your request here...">
+    <button id="text-submit">Submit</button>
+    <button id="voice-btn">🎤 Speak</button>
+    <p id="result">Click the button and speak or type...</p>
+    
+    <h2>Generated Response:</h2>
+    <div id="response-box">
+        <button id="copy-btn">📋 Copy</button>
+        <pre><code id="response-text">No response yet.</code></pre>
+    </div>
+    
+    <script>
+        $(document).ready(function () {
+            $("#voice-btn").click(function () {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = "en-US";
+                recognition.onresult = function (event) {
+                    const result = event.results[0][0].transcript;
+                    $("#result").text("You said: " + result);
+                    sendTextToServer(result);
+                };
+                recognition.start();
+            });
+
+            $("#text-submit").click(function () {
+                const text = $("#text-input").val();
+                if (text.trim() !== "") {
+                    $("#result").text("Processing...");
+                    sendTextToServer(text);
+                }
+            });
+
+            function sendTextToServer(text) {
+                $("#result").text("Processing...");
+                $.ajax({
+                    type: "POST",
+                    url: "http://localhost:8000/process_request",  // ✅ Fixed API Endpoint
+                    contentType: "application/json",
+                    data: JSON.stringify({ text: text }),
+                    success: function (data) {
+                        $("#response-text").text(data.response);
+                        hljs.highlightElement($("#response-text")[0]);
+                        $("#result").text("Response received!");
+                    },
+                    error: function () {
+                        $("#response-text").text("Error: Unable to connect to server.");
+                        $("#result").text("Failed to get response.");
+                    }
+                });
+            }
+
+            $("#copy-btn").click(function () {
+                const responseText = $("#response-text").text();
+                navigator.clipboard.writeText(responseText).then(() => {
+                    alert("Response copied to clipboard!");
+                });
+            });
+        });
+    </script>
+</body>
+</html>
