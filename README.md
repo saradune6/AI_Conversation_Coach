@@ -1,4 +1,4 @@
-# Vibe Coding Agent - Setup Guide
+# AI_Conversation_Coach
 
 ## Introduction
 Vibe Coding Agent is a FastAPI-based application that integrates with Google Gemini to generate Python code from speech input. This guide provides step-by-step installation and setup instructions for both Anaconda and standard Python virtual environments.
